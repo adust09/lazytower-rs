@@ -32,33 +32,37 @@ pub struct MembershipProof<T, D: Digest> {
 impl<D: Digest> ProofPath<D> {
     /// Create a new empty proof path
     pub fn new() -> Self {
-        Self {
-            elements: Vec::new(),
-        }
+        Self { elements: Vec::new() }
     }
-    
+
     /// Add a left sibling to the path
     pub fn add_left(&mut self, digest: D::Output) {
         self.elements.push(PathElement::Left(digest));
     }
-    
+
     /// Add a right sibling to the path
     pub fn add_right(&mut self, digest: D::Output) {
         self.elements.push(PathElement::Right(digest));
     }
-    
+
     /// Verify a proof path for an item
     pub fn verify<T: AsRef<[u8]>>(&self, item: &T, expected_root: &D::Output) -> bool {
         let mut current = D::digest_item(item);
-        
+
         for element in &self.elements {
             current = match element {
                 PathElement::Left(left) => D::combine(left, &current),
                 PathElement::Right(right) => D::combine(&current, right),
             };
         }
-        
+
         &current == expected_root
+    }
+}
+
+impl<D: Digest> Default for ProofPath<D> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -73,13 +77,13 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> MembershipProof<T, D> {
 mod tests {
     use super::*;
     use crate::digest::mock::MockDigest;
-    
+
     #[test]
     fn test_empty_proof_path() {
         let path: ProofPath<MockDigest> = ProofPath::new();
         assert_eq!(path.elements.len(), 0);
     }
-    
+
     #[test]
     fn test_proof_path_construction() {
         let mut path: ProofPath<MockDigest> = ProofPath::new();
