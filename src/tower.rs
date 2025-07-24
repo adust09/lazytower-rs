@@ -37,6 +37,7 @@ struct ItemPosition {
 #[derive(Debug, Clone)]
 struct OverflowRecord {
     /// The level that overflowed
+    #[allow(dead_code)]
     level: usize,
     /// The indices of items that were digested together
     item_indices: Vec<usize>,
@@ -121,7 +122,7 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
     }
 
     /// Recursive helper to append a node to a specific level
-    fn append_to_level(&mut self, level: usize, node: TowerNode<T, D>, initial_item_index: Option<usize>) {
+    fn append_to_level(&mut self, level: usize, node: TowerNode<T, D>, _initial_item_index: Option<usize>) {
         // Ensure we have enough levels
         while self.levels.len() <= level {
             self.levels.push(Vec::new());
