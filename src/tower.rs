@@ -39,79 +39,74 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
     /// Create a new empty LazyTower with the specified width
     pub fn new(width: usize) -> Self {
         assert!(width > 1, "Tower width must be greater than 1");
-        Self {
-            width,
-            levels: vec![Vec::new()],
-            item_count: 0,
-            _digest: PhantomData,
-        }
+        Self { width, levels: vec![Vec::new()], item_count: 0, _digest: PhantomData }
     }
-    
+
     /// Create a new LazyTower with default width of 4
     pub fn with_default_width() -> Self {
         Self::new(4)
     }
-    
+
     /// Get the current height of the tower (number of levels)
     pub fn height(&self) -> usize {
         self.levels.len()
     }
-    
+
     /// Get the total number of items in the tower
     pub fn len(&self) -> usize {
         self.item_count
     }
-    
+
     /// Check if the tower is empty
     pub fn is_empty(&self) -> bool {
         self.item_count == 0
     }
-    
+
     /// Get the width of the tower
     pub fn width(&self) -> usize {
         self.width
     }
-    
+
     /// Append an item to the tower (O(1) amortized)
     pub fn append(&mut self, item: T) {
         self.item_count += 1;
         self.append_to_level(0, TowerNode::Item(item));
     }
-    
+
     /// Recursive helper to append a node to a specific level
     fn append_to_level(&mut self, level: usize, node: TowerNode<T, D>) {
         // Ensure we have enough levels
         while self.levels.len() <= level {
             self.levels.push(Vec::new());
         }
-        
+
         // Add the node to the current level
         self.levels[level].push(node);
-        
+
         // Check if the level overflows
         if self.levels[level].len() >= self.width {
             // Compute digest of the full level
             let digest = D::digest_items(&self.levels[level]);
-            
+
             // Clear the current level
             self.levels[level].clear();
-            
+
             // Recursively add the digest to the next level
             self.append_to_level(level + 1, TowerNode::Digest(digest));
         }
     }
-    
+
     /// Get a reference to a specific level
     pub fn level(&self, index: usize) -> Option<&Vec<TowerNode<T, D>>> {
         self.levels.get(index)
     }
-    
+
     /// Get all levels (for testing and debugging)
     #[cfg(test)]
     pub fn levels(&self) -> &Vec<Vec<TowerNode<T, D>>> {
         &self.levels
     }
-    
+
     /// Compute the root digest of the tower
     pub fn root_digest(&self) -> Option<D::Output> {
         // Find the highest non-empty level
@@ -131,7 +126,7 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         }
         None
     }
-    
+
     /// Store the original items for proof generation
     /// Note: In a production implementation, this would be stored more efficiently
     #[cfg(test)]
@@ -139,7 +134,7 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         // For testing purposes, we'll implement a simple storage mechanism
         // In production, this would be handled differently
     }
-    
+
     /// Generate a membership proof for an item at a given index
     /// Note: This is a simplified implementation for testing
     /// In production, you'd need to track item positions through overflows
@@ -154,7 +149,7 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
 mod tests {
     use super::*;
     use crate::digest::mock::MockDigest;
-    
+
     #[test]
     fn test_new_tower() {
         let tower: LazyTower<Vec<u8>, MockDigest> = LazyTower::new(4);
@@ -163,7 +158,7 @@ mod tests {
         assert_eq!(tower.len(), 0);
         assert!(tower.is_empty());
     }
-    
+
     #[test]
     #[should_panic(expected = "Tower width must be greater than 1")]
     fn test_invalid_width() {
