@@ -1,0 +1,11 @@
+[package]
+name = "lazytower-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sha2 = { version = "0.10", optional = true }
+
+[features]
+default = []
+sha256 = ["sha2"]
