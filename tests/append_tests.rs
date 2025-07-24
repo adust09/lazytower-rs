@@ -45,7 +45,7 @@ impl Digest for TestDigest {
 
 #[test]
 fn test_append_single_item() {
-    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4);
+    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4).unwrap();
 
     tower.append(TestItem(b"item1".to_vec()));
 
@@ -57,7 +57,7 @@ fn test_append_single_item() {
 
 #[test]
 fn test_append_multiple_items_no_overflow() {
-    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4);
+    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4).unwrap();
 
     tower.append(TestItem(b"item1".to_vec()));
     tower.append(TestItem(b"item2".to_vec()));
@@ -70,7 +70,7 @@ fn test_append_multiple_items_no_overflow() {
 
 #[test]
 fn test_append_with_overflow_width_2() {
-    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(2).unwrap();
 
     // Add two items - should trigger overflow
     tower.append(TestItem(b"item1".to_vec()));
@@ -87,7 +87,7 @@ fn test_append_with_overflow_width_2() {
 
 #[test]
 fn test_append_with_overflow_width_3() {
-    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(3);
+    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(3).unwrap();
 
     // Add three items - should trigger overflow
     tower.append(TestItem(b"a".to_vec()));
@@ -107,7 +107,7 @@ fn test_append_with_overflow_width_3() {
 
 #[test]
 fn test_append_with_multiple_overflows() {
-    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(2).unwrap();
 
     // Add 8 items to trigger multiple overflows
     for i in 0..8 {
@@ -134,7 +134,7 @@ fn test_different_tower_widths() {
     let widths = vec![2, 3, 4, 5, 8, 16];
 
     for width in widths {
-        let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(width);
+        let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(width).unwrap();
 
         // Add items up to width - 1 (no overflow)
         for i in 0..width - 1 {
@@ -155,7 +155,7 @@ fn test_different_tower_widths() {
 
 #[test]
 fn test_empty_tower_operations() {
-    let tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4);
+    let tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4).unwrap();
 
     assert!(tower.is_empty());
     assert_eq!(tower.len(), 0);
@@ -165,7 +165,7 @@ fn test_empty_tower_operations() {
 
 #[test]
 fn test_large_scale_append() {
-    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4);
+    let mut tower: LazyTower<TestItem, TestDigest> = LazyTower::new(4).unwrap();
 
     // Add 1000 items
     for i in 0..1000 {

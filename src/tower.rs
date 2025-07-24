@@ -1,6 +1,7 @@
 //! Core LazyTower implementation
 
 use crate::digest::Digest;
+use crate::error::LazyTowerError;
 use crate::proof::MembershipProof;
 use std::marker::PhantomData;
 
@@ -37,13 +38,15 @@ pub struct LazyTower<T, D: Digest> {
 
 impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
     /// Create a new empty LazyTower with the specified width
-    pub fn new(width: usize) -> Self {
-        assert!(width > 1, "Tower width must be greater than 1");
-        Self { width, levels: vec![Vec::new()], item_count: 0, _digest: PhantomData }
+    pub fn new(width: usize) -> Result<Self, LazyTowerError> {
+        if width <= 1 {
+            return Err(LazyTowerError::InvalidWidth { width });
+        }
+        Ok(Self { width, levels: vec![Vec::new()], item_count: 0, _digest: PhantomData })
     }
 
     /// Create a new LazyTower with default width of 4
-    pub fn with_default_width() -> Self {
+    pub fn with_default_width() -> Result<Self, LazyTowerError> {
         Self::new(4)
     }
 
@@ -138,10 +141,15 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
     /// Generate a membership proof for an item at a given index
     /// Note: This is a simplified implementation for testing
     /// In production, you'd need to track item positions through overflows
-    pub fn generate_proof(&self, _index: usize) -> Option<MembershipProof<T, D>> {
+    pub fn generate_proof(&self, index: usize) -> Result<MembershipProof<T, D>, LazyTowerError> {
+        // Check bounds
+        if self.item_count == 0 || index >= self.item_count {
+            return Err(LazyTowerError::InvalidIndex { index, max: self.item_count });
+        }
+        
         // TODO: Implement actual proof generation
         // This requires tracking item positions through the tower structure
-        None
+        Err(LazyTowerError::ProofGenerationNotImplemented)
     }
 }
 
@@ -152,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_new_tower() {
-        let tower: LazyTower<Vec<u8>, MockDigest> = LazyTower::new(4);
+        let tower: LazyTower<Vec<u8>, MockDigest> = LazyTower::new(4).unwrap();
         assert_eq!(tower.width(), 4);
         assert_eq!(tower.height(), 1);
         assert_eq!(tower.len(), 0);
@@ -160,8 +168,12 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Tower width must be greater than 1")]
     fn test_invalid_width() {
-        let _tower: LazyTower<Vec<u8>, MockDigest> = LazyTower::new(1);
+        let result: Result<LazyTower<Vec<u8>, MockDigest>, _> = LazyTower::new(1);
+        assert!(result.is_err());
+        match result {
+            Err(LazyTowerError::InvalidWidth { width }) => assert_eq!(width, 1),
+            _ => panic!("Expected InvalidWidth error"),
+        }
     }
 }

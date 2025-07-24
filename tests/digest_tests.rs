@@ -45,7 +45,7 @@ impl Digest for TrackedDigest {
 
 #[test]
 fn test_digest_computation_on_overflow() {
-    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(2).unwrap();
 
     // Add two items to trigger overflow
     tower.append(TestItem("A".to_string()));
@@ -70,7 +70,7 @@ fn test_digest_computation_on_overflow() {
 
 #[test]
 fn test_nested_digest_computation() {
-    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(2).unwrap();
 
     // Add 4 items to trigger two overflows and then a nested overflow
     tower.append(TestItem("A".to_string()));
@@ -100,7 +100,7 @@ fn test_nested_digest_computation() {
 
 #[test]
 fn test_mixed_nodes_and_digests() {
-    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(3);
+    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(3).unwrap();
 
     // Add 7 items with width 3
     for i in 0..7 {
@@ -138,7 +138,7 @@ fn test_mixed_nodes_and_digests() {
 
 #[test]
 fn test_digest_of_mixed_nodes() {
-    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, TrackedDigest> = LazyTower::new(2).unwrap();
 
     // This test ensures that digest_items works correctly on TowerNode types
     // which can be either Item or Digest variants
@@ -198,7 +198,7 @@ mod sha256_tests {
 
     #[test]
     fn test_sha256_digest_computation() {
-        let mut tower: LazyTower<TestItem, Sha256Digest> = LazyTower::new(2);
+        let mut tower: LazyTower<TestItem, Sha256Digest> = LazyTower::new(2).unwrap();
 
         // Add items and verify digests are computed
         tower.append(TestItem("hello".to_string()));

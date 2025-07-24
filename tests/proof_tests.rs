@@ -140,7 +140,7 @@ fn test_membership_proof_complete() {
 // Integration test with LazyTower
 #[test]
 fn test_generate_proof_for_tower_item() {
-    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2).unwrap();
 
     // Add 4 items to create a specific structure
     tower.append(TestItem("A".to_string()));
@@ -188,7 +188,7 @@ fn test_proof_path_left_and_right_siblings() {
 // TODO: Add tests for actual proof generation once implemented in LazyTower
 // #[test]
 // fn test_tower_generate_membership_proof() {
-//     let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(3);
+//     let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(3).unwrap();
 //
 //     // Add items
 //     let items = vec!["A", "B", "C", "D", "E"];

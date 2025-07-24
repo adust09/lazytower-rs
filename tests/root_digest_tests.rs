@@ -45,13 +45,13 @@ impl Digest for MockDigest {
 
 #[test]
 fn test_root_digest_empty_tower() {
-    let tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4);
+    let tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4).unwrap();
     assert_eq!(tower.root_digest(), None);
 }
 
 #[test]
 fn test_root_digest_single_item() {
-    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4);
+    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4).unwrap();
     tower.append(TestItem("A".to_string()));
 
     let root = tower.root_digest().expect("Should have root");
@@ -60,7 +60,7 @@ fn test_root_digest_single_item() {
 
 #[test]
 fn test_root_digest_multiple_items_no_overflow() {
-    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4);
+    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4).unwrap();
     tower.append(TestItem("A".to_string()));
     tower.append(TestItem("B".to_string()));
     tower.append(TestItem("C".to_string()));
@@ -71,7 +71,7 @@ fn test_root_digest_multiple_items_no_overflow() {
 
 #[test]
 fn test_root_digest_with_overflow() {
-    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2).unwrap();
 
     // Add 4 items to create overflows
     tower.append(TestItem("A".to_string()));
@@ -86,7 +86,7 @@ fn test_root_digest_with_overflow() {
 
 #[test]
 fn test_root_digest_complex_structure() {
-    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(3);
+    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(3).unwrap();
 
     // Add 7 items
     for i in 0..7 {
@@ -104,7 +104,7 @@ fn test_root_digest_complex_structure() {
 
 #[test]
 fn test_root_digest_deep_tower() {
-    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2);
+    let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2).unwrap();
 
     // Add 8 items to create a deep structure
     for i in 0..8 {

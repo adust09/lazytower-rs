@@ -3,10 +3,12 @@
 //! This implementation provides efficient membership proofs with configurable tower width.
 
 pub mod digest;
+pub mod error;
 pub mod proof;
 pub mod tower;
 
 pub use digest::Digest;
+pub use error::LazyTowerError;
 pub use proof::{MembershipProof, ProofPath};
 pub use tower::{LazyTower, TowerNode};
 
