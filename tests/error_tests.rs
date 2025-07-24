@@ -64,7 +64,7 @@ fn test_new_tower_with_invalid_width_one() {
 fn test_new_tower_with_valid_width() {
     let result = LazyTower::<Vec<u8>, MockDigest>::new(4);
     assert!(result.is_ok());
-    
+
     let tower = result.unwrap();
     assert_eq!(tower.width(), 4);
 }
@@ -73,7 +73,7 @@ fn test_new_tower_with_valid_width() {
 fn test_generate_proof_invalid_index() {
     let tower = LazyTower::<Vec<u8>, MockDigest>::new(4).unwrap();
     let result = tower.generate_proof(0);
-    
+
     match result {
         Err(LazyTowerError::InvalidIndex { index, max }) => {
             assert_eq!(index, 0);
@@ -88,9 +88,9 @@ fn test_generate_proof_index_out_of_bounds() {
     let mut tower = LazyTower::<Vec<u8>, MockDigest>::new(4).unwrap();
     tower.append(vec![1, 2, 3]);
     tower.append(vec![4, 5, 6]);
-    
+
     let result = tower.generate_proof(5);
-    
+
     match result {
         Err(LazyTowerError::InvalidIndex { index, max }) => {
             assert_eq!(index, 5);

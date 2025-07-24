@@ -92,3 +92,101 @@ pub mod mock {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::LazyTower;
+
+    /// Test item
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    struct TestItem(String);
+
+    impl AsRef<[u8]> for TestItem {
+        fn as_ref(&self) -> &[u8] {
+            self.0.as_bytes()
+        }
+    }
+
+    #[test]
+    fn test_root_digest_empty_tower() {
+        use mock::MockDigest;
+        let tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4).unwrap();
+        assert_eq!(tower.root_digest(), None);
+    }
+
+    #[test]
+    fn test_root_digest_single_item() {
+        use mock::MockDigest;
+        let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4).unwrap();
+        tower.append(TestItem("A".to_string()));
+
+        let root = tower.root_digest().expect("Should have root");
+        assert_eq!(root, b"digest(A)");
+    }
+
+    #[test]
+    fn test_root_digest_multiple_items_no_overflow() {
+        use mock::MockDigest;
+        let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(4).unwrap();
+        tower.append(TestItem("A".to_string()));
+        tower.append(TestItem("B".to_string()));
+        tower.append(TestItem("C".to_string()));
+
+        let root = tower.root_digest().expect("Should have root");
+        assert_eq!(root, b"digest_items[A,B,C]");
+    }
+
+    #[test]
+    fn test_root_digest_with_overflow() {
+        use mock::MockDigest;
+        let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2).unwrap();
+
+        // Add 4 items to create overflows
+        tower.append(TestItem("A".to_string()));
+        tower.append(TestItem("B".to_string()));
+        tower.append(TestItem("C".to_string()));
+        tower.append(TestItem("D".to_string()));
+
+        // Structure: Level 2 has H[H[A,B],H[C,D]]
+        let root = tower.root_digest().expect("Should have root");
+        assert_eq!(root, b"digest_items[digest_items[A,B],digest_items[C,D]]");
+    }
+
+    #[test]
+    fn test_root_digest_complex_structure() {
+        use mock::MockDigest;
+        let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(3).unwrap();
+
+        // Add 7 items
+        for i in 0..7 {
+            tower.append(TestItem(i.to_string()));
+        }
+
+        // Structure:
+        // Level 0: [6]
+        // Level 1: [H[0,1,2], H[3,4,5]]
+
+        let root = tower.root_digest().expect("Should have root");
+        // The root should be the combination of level 1 nodes
+        assert_eq!(root, b"digest_items[digest_items[0,1,2],digest_items[3,4,5]]");
+    }
+
+    #[test]
+    fn test_root_digest_deep_tower() {
+        use mock::MockDigest;
+        let mut tower: LazyTower<TestItem, MockDigest> = LazyTower::new(2).unwrap();
+
+        // Add 8 items to create a deep structure
+        for i in 0..8 {
+            tower.append(TestItem(i.to_string()));
+        }
+
+        // This creates multiple levels of overflows
+        let root = tower.root_digest().expect("Should have root");
+
+        // Verify we get a valid root (exact structure depends on overflow pattern)
+        assert!(!root.is_empty());
+        assert!(root.starts_with(b"digest"));
+    }
+}
