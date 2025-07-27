@@ -1,8 +1,7 @@
-# LazyTower-rs
-
-A Rust implementation of [LazyTower](https://ethresear.ch/t/lazytower-an-o-1-replacement-for-incremental-merkle-trees/21683) - an O(1) amortized cost alternative to Incremental Merkle Trees, designed for efficient proofs.
-
 ## Overview
+
+an O(1) amortized cost alternative to Incremental Merkle Trees, designed for efficient proofs.
+
 LazyTower is a data structure that provides:
 - **O(1) amortized append operations**
 - **Efficient proof generation**
