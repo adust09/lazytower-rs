@@ -57,12 +57,21 @@ impl<D: Digest> ProofPath<D> {
 
     /// Verify a proof path for an item
     pub fn verify<T: AsRef<[u8]>>(&self, item: &T, expected_root: &D::Output) -> bool {
-        let mut current = D::digest_item(item);
-        let mut is_first_level = true;
+        // Start with the raw item for the first level
+        let mut current_is_raw = true;
+        let current_raw: Option<Vec<u8>> = Some(item.as_ref().to_vec());
+        let mut current_digest: Option<D::Output> = None;
 
-        for element in &self.elements {
+        for (level_idx, element) in self.elements.iter().enumerate() {
             match element {
                 PathElement::Siblings { position, siblings } => {
+                    // Get current value as digest
+                    let current = if current_is_raw {
+                        D::digest_item(&current_raw.as_ref().unwrap())
+                    } else {
+                        current_digest.clone().unwrap()
+                    };
+
                     // Reconstruct the full list of nodes at this level
                     let mut nodes = Vec::with_capacity(siblings.len() + 1);
 
@@ -78,37 +87,67 @@ impl<D: Digest> ProofPath<D> {
                     }
 
                     // Compute the combined digest
-                    current = D::digest_items(&nodes);
+                    current_digest = Some(D::digest_items(&nodes));
+                    current_is_raw = false;
                 }
                 PathElement::RawSiblings { position, siblings } => {
-                    // For raw siblings (level 0), we need to reconstruct with raw bytes
-                    let mut raw_items: Vec<&[u8]> = Vec::with_capacity(siblings.len() + 1);
+                    if level_idx == 0 {
+                        // First level: siblings are raw items
+                        let mut raw_items: Vec<&[u8]> = Vec::with_capacity(siblings.len() + 1);
 
-                    // Insert item and siblings in correct positions
-                    let mut sibling_idx = 0;
-                    for i in 0..=siblings.len() {
-                        if i == *position {
-                            // Use the original item for the first level
-                            if is_first_level {
+                        // Insert item and siblings in correct positions
+                        let mut sibling_idx = 0;
+                        for i in 0..=siblings.len() {
+                            if i == *position {
                                 raw_items.push(item.as_ref());
-                            } else {
-                                // This shouldn't happen - RawSiblings should only be at level 0
-                                return false;
+                            } else if sibling_idx < siblings.len() {
+                                raw_items.push(&siblings[sibling_idx]);
+                                sibling_idx += 1;
                             }
-                        } else if sibling_idx < siblings.len() {
-                            raw_items.push(&siblings[sibling_idx]);
-                            sibling_idx += 1;
                         }
-                    }
 
-                    // Compute digest from raw items
-                    current = D::digest_items(&raw_items);
+                        // Compute digest from raw items
+                        current_digest = Some(D::digest_items(&raw_items));
+                        current_is_raw = false;
+                    } else {
+                        // Higher levels: siblings are already digests stored as raw bytes
+                        // Get current value as digest
+                        let current = if current_is_raw {
+                            D::digest_item(&current_raw.as_ref().unwrap())
+                        } else {
+                            current_digest.clone().unwrap()
+                        };
+
+                        // Treat raw bytes as digest values and combine them
+                        let mut all_items: Vec<&[u8]> = Vec::with_capacity(siblings.len() + 1);
+
+                        // Insert current and siblings in correct positions
+                        let mut sibling_idx = 0;
+                        for i in 0..=siblings.len() {
+                            if i == *position {
+                                all_items.push(current.as_ref());
+                            } else if sibling_idx < siblings.len() {
+                                all_items.push(&siblings[sibling_idx]);
+                                sibling_idx += 1;
+                            }
+                        }
+
+                        // Compute combined digest
+                        current_digest = Some(D::digest_items(&all_items));
+                        current_is_raw = false;
+                    }
                 }
             }
-            is_first_level = false;
         }
 
-        &current == expected_root
+        // Get final digest
+        let final_digest = if current_is_raw {
+            D::digest_item(&current_raw.as_ref().unwrap())
+        } else {
+            current_digest.unwrap()
+        };
+
+        &final_digest == expected_root
     }
 }
 
