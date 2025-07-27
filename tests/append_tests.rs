@@ -37,10 +37,6 @@ impl Digest for TestDigest {
             items.iter().map(|item| String::from_utf8_lossy(item.as_ref()).to_string()).collect();
         TestDigestOutput(format!("D[{}]", items_str.join(",")))
     }
-
-    fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output {
-        TestDigestOutput(format!("C({},{})", left.0, right.0))
-    }
 }
 
 #[test]

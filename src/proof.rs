@@ -151,11 +151,6 @@ impl<D: Digest> ProofPath<D> {
     }
 }
 
-impl<D: Digest> Default for ProofPath<D> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl<T: Clone + AsRef<[u8]>, D: Digest> MembershipProof<T, D> {
     /// Verify the proof

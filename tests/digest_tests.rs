@@ -37,10 +37,6 @@ impl Digest for TrackedDigest {
             items.iter().map(|item| String::from_utf8_lossy(item.as_ref()).to_string()).collect();
         TrackedDigestOutput(format!("D[{}]", items_str.join(",")))
     }
-
-    fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output {
-        TrackedDigestOutput(format!("C({},{})", left.0, right.0))
-    }
 }
 
 #[test]
@@ -184,11 +180,6 @@ fn test_digest_trait_implementation() {
         vec![TestItem("a".to_string()), TestItem("b".to_string()), TestItem("c".to_string())];
     let multi_digest = TrackedDigest::digest_items(&items);
     assert_eq!(multi_digest.0, "D[a,b,c]");
-
-    let left = TrackedDigestOutput("left".to_string());
-    let right = TrackedDigestOutput("right".to_string());
-    let combined = TrackedDigest::combine(&left, &right);
-    assert_eq!(combined.0, "C(left,right)");
 }
 
 #[cfg(feature = "sha256")]

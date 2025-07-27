@@ -37,15 +37,6 @@ impl Digest for MockDigest {
         result.extend_from_slice(b"]");
         result
     }
-
-    fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output {
-        let mut result = b"combine(".to_vec();
-        result.extend_from_slice(left);
-        result.extend_from_slice(b",");
-        result.extend_from_slice(right);
-        result.extend_from_slice(b")");
-        result
-    }
 }
 
 // ===== ProofPath Verification Tests =====

@@ -12,9 +12,6 @@ pub trait Digest: Clone + Debug + PartialEq + Eq {
 
     /// Compute the digest of multiple items (for level computation)
     fn digest_items<T: AsRef<[u8]>>(items: &[T]) -> Self::Output;
-
-    /// Combine two digests (for Merkle tree construction)
-    fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output;
 }
 
 /// SHA256 implementation of Digest
@@ -40,13 +37,6 @@ pub mod sha256 {
             for item in items {
                 hasher.update(item.as_ref());
             }
-            hasher.finalize().into()
-        }
-
-        fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output {
-            let mut hasher = Sha256::new();
-            hasher.update(left);
-            hasher.update(right);
             hasher.finalize().into()
         }
     }
@@ -79,15 +69,6 @@ pub mod mock {
                 result.extend_from_slice(item.as_ref());
             }
             result.extend_from_slice(b"]");
-            result
-        }
-
-        fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output {
-            let mut result = b"combine(".to_vec();
-            result.extend_from_slice(left);
-            result.extend_from_slice(b",");
-            result.extend_from_slice(right);
-            result.extend_from_slice(b")");
             result
         }
     }

@@ -95,10 +95,6 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         })
     }
 
-    /// Create a new LazyTower with default width of 4
-    pub fn with_default_width() -> Result<Self, LazyTowerError> {
-        Self::new(4)
-    }
 
     /// Get the current height of the tower (number of levels)
     pub fn height(&self) -> usize {
@@ -209,11 +205,6 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         self.levels.get(index)
     }
 
-    /// Get all levels (for testing and debugging)
-    #[cfg(test)]
-    pub fn levels(&self) -> &Vec<Vec<TowerNode<T, D>>> {
-        &self.levels
-    }
 
     /// Compute the root digest of the tower
     pub fn root_digest(&self) -> Option<D::Output> {
