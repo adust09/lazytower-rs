@@ -1,8 +1,8 @@
-//! Membership proof structures and generation
+//! proof structures and generation
 
 use crate::digest::Digest;
 
-/// A path element in a membership proof
+/// A path element in a proof
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PathElement<D: Digest> {
     /// Siblings at the same level with position information
@@ -21,14 +21,14 @@ pub enum PathElement<D: Digest> {
     },
 }
 
-/// A membership proof path from item to root
+/// A proof path from item to root
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProofPath<D: Digest> {
     /// The path elements from bottom to top
     pub elements: Vec<PathElement<D>>,
 }
 
-/// A complete membership proof
+/// A complete proof
 #[derive(Debug, Clone)]
 pub struct MembershipProof<T, D: Digest> {
     /// The item being proved
@@ -119,7 +119,7 @@ impl<D: Digest> Default for ProofPath<D> {
 }
 
 impl<T: Clone + AsRef<[u8]>, D: Digest> MembershipProof<T, D> {
-    /// Verify the membership proof
+    /// Verify the proof
     pub fn verify(&self) -> bool {
         self.path.verify(&self.item, &self.root)
     }

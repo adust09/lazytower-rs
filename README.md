@@ -1,11 +1,11 @@
 # LazyTower-rs
 
-A Rust implementation of [LazyTower](https://ethresear.ch/t/lazytower-an-o-1-replacement-for-incremental-merkle-trees/21683) - an O(1) amortized cost alternative to Incremental Merkle Trees, designed for efficient membership proofs.
+A Rust implementation of [LazyTower](https://ethresear.ch/t/lazytower-an-o-1-replacement-for-incremental-merkle-trees/21683) - an O(1) amortized cost alternative to Incremental Merkle Trees, designed for efficient proofs.
 
 ## Overview
 LazyTower is a data structure that provides:
 - **O(1) amortized append operations**
-- **Efficient membership proof generation**
+- **Efficient proof generation**
 - **Configurable width (branching factor)**
 - **Support for different hash functions**
 
@@ -30,7 +30,7 @@ tower.append(b"item2".to_vec());
 // Get the root digest
 let root = tower.root_digest();
 
-// Generate and verify membership proof
+// Generate and verify proof
 match tower.generate_proof(0) {
     Ok(proof) => {
         println!("Generated proof for item at index 0");

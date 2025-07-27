@@ -199,7 +199,7 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         None
     }
 
-    /// Generate a membership proof for an item at a given index
+    /// Generate a proof for an item at a given index
     pub fn generate_proof(&self, index: usize) -> Result<MembershipProof<T, D>, LazyTowerError> {
         // Check bounds
         if self.item_count == 0 || index >= self.item_count {

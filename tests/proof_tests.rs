@@ -1,6 +1,5 @@
-//! Tests for membership proof generation and verification
+//! Tests for proof generation and verification
 
-use lazytower_rs::digest::mock::MockDigest;
 use lazytower_rs::{Digest, LazyTower, MembershipProof, ProofPath};
 
 /// Test item that can be converted to bytes
@@ -10,6 +9,42 @@ struct TestItem(String);
 impl AsRef<[u8]> for TestItem {
     fn as_ref(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+}
+
+/// Mock digest for testing
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct MockDigest;
+
+impl Digest for MockDigest {
+    type Output = Vec<u8>;
+
+    fn digest_item<T: AsRef<[u8]>>(item: &T) -> Self::Output {
+        let mut result = b"digest(".to_vec();
+        result.extend_from_slice(item.as_ref());
+        result.extend_from_slice(b")");
+        result
+    }
+
+    fn digest_items<T: AsRef<[u8]>>(items: &[T]) -> Self::Output {
+        let mut result = b"digest_items[".to_vec();
+        for (i, item) in items.iter().enumerate() {
+            if i > 0 {
+                result.extend_from_slice(b",");
+            }
+            result.extend_from_slice(item.as_ref());
+        }
+        result.extend_from_slice(b"]");
+        result
+    }
+
+    fn combine(left: &Self::Output, right: &Self::Output) -> Self::Output {
+        let mut result = b"combine(".to_vec();
+        result.extend_from_slice(left);
+        result.extend_from_slice(b",");
+        result.extend_from_slice(right);
+        result.extend_from_slice(b")");
+        result
     }
 }
 

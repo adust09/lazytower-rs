@@ -45,7 +45,7 @@ cargo clippy -- -D warnings   # Treat warnings as errors
    - `combine()`: Combine two digests (for Merkle tree construction)
    - Includes MockDigest for testing and optional SHA256 implementation
 
-4. **Proof System** (`src/proof.rs`): Membership proof generation and verification
+4. **Proof System** (`src/proof.rs`): proof generation and verification
    - ProofPath with Left/Right siblings for Merkle path
    - Note: Proof generation is partially implemented (needs position tracking)
 
@@ -66,4 +66,4 @@ Tests are organized by functionality:
 
 ## Project Insights
 
-- This repository implements LazyTower not for Membership Proof, but as a component to replace XMSS's Merkle Tree
+- This repository implements LazyTower not for proof, but as a component to replace XMSS's Merkle Tree
