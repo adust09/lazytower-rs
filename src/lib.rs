@@ -11,8 +11,3 @@ pub use digest::Digest;
 pub use error::LazyTowerError;
 pub use proof::{MembershipProof, ProofPath};
 pub use tower::{LazyTower, TowerNode};
-
-#[cfg(test)]
-mod tests {
-    // Basic tests can be added here
-}

@@ -53,7 +53,7 @@ pub mod sha256 {
 }
 
 /// Mock digest for testing
-#[cfg(test)]
+#[cfg(any(test, feature = "test-utils"))]
 pub mod mock {
     use super::*;
 

@@ -63,3 +63,7 @@ Tests are organized by functionality:
 - Items must implement `AsRef<[u8]>` for hashing
 - Levels are stored bottom-up (level 0 is where new items are appended)
 - Root digest computation walks levels from bottom to top, combining nodes
+
+## Project Insights
+
+- This repository implements LazyTower not for Membership Proof, but as a component to replace XMSS's Merkle Tree
