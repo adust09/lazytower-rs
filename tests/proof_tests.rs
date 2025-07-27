@@ -441,3 +441,91 @@ fn test_proof_debugging() {
         }
     }
 }
+
+#[test]
+fn test_multi_level_overflow_proof_generation() {
+    let mut tower: LazyTower<Vec<u8>, MockDigest> = LazyTower::new(2).unwrap();
+
+    // Add 4 items to create multi-level structure
+    // Items 0,1 overflow to level 1 as digest
+    // Items 2,3 overflow to level 1 as digest
+    // Level 1 then overflows to level 2
+    for i in 0..4 {
+        tower.append(vec![i]);
+    }
+
+    // Tower structure:
+    // Level 0: [] (empty after second overflow)
+    // Level 1: [] (empty after overflow to level 2)
+    // Level 2: [digest(digest(0,1), digest(2,3))]
+
+    println!("Tower height: {}", tower.height());
+    for i in 0..tower.height() {
+        if let Some(level) = tower.level(i) {
+            println!("Level {}: {} nodes", i, level.len());
+        }
+    }
+
+    // Debug: compute expected root manually
+    let digest_01 = MockDigest::digest_items(&[&vec![0u8], &vec![1u8]]);
+    let digest_23 = MockDigest::digest_items(&[&vec![2u8], &vec![3u8]]);
+    let expected_root = MockDigest::digest_items(&[&digest_01, &digest_23]);
+    println!("\nExpected root: {:?}", expected_root);
+
+    let actual_root = tower.root_digest().unwrap();
+    println!("Actual root: {:?}", actual_root);
+    assert_eq!(actual_root, expected_root, "Root digest mismatch!");
+
+    // Try to generate and verify proofs for all items
+    for i in 0..4 {
+        match tower.generate_proof(i) {
+            Ok(proof) => {
+                println!("\nGenerating proof for item {}", i);
+                println!("Item value: {:?}", proof.item);
+                println!("Root digest: {:?}", proof.root);
+                println!("Proof path elements: {}", proof.path.elements.len());
+
+                for (j, elem) in proof.path.elements.iter().enumerate() {
+                    match elem {
+                        lazytower_rs::proof::PathElement::Siblings { position, siblings } => {
+                            println!(
+                                "  Level {}: Position {} with {} siblings (digest)",
+                                j,
+                                position,
+                                siblings.len()
+                            );
+                            for (k, sib) in siblings.iter().enumerate() {
+                                println!("    Sibling {}: {:?}", k, sib);
+                            }
+                        }
+                        lazytower_rs::proof::PathElement::RawSiblings { position, siblings } => {
+                            println!(
+                                "  Level {}: Position {} with {} raw siblings",
+                                j,
+                                position,
+                                siblings.len()
+                            );
+                            for (k, sib) in siblings.iter().enumerate() {
+                                println!("    Raw sibling {}: {:?}", k, sib);
+                            }
+                        }
+                    }
+                }
+
+                let verified = proof.verify();
+                println!("Verification result: {}", verified);
+
+                // Debug the verification process
+                let current_digest = MockDigest::digest_item(&proof.item);
+                println!("\nDebug verification:");
+                println!("Initial digest of item: {:?}", current_digest);
+
+                // With the new implementation, this should pass
+                assert!(verified, "Proof verification failed for item {}", i);
+            }
+            Err(e) => {
+                panic!("Failed to generate proof for item {}: {:?}", i, e);
+            }
+        }
+    }
+}

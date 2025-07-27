@@ -9,5 +9,5 @@ pub mod tower;
 
 pub use digest::Digest;
 pub use error::LazyTowerError;
-pub use proof::{MembershipProof, ProofPath, PathElement};
+pub use proof::{MembershipProof, PathElement, ProofPath};
 pub use tower::{LazyTower, TowerNode};
