@@ -68,14 +68,14 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         if width <= 1 {
             return Err(LazyTowerError::InvalidWidth { width });
         }
-        Ok(Self { 
-            width, 
-            levels: vec![Vec::new()], 
+        Ok(Self {
+            width,
+            levels: vec![Vec::new()],
             item_count: 0,
             items: HashMap::new(),
             item_positions: HashMap::new(),
             overflow_records: Vec::new(),
-            _digest: PhantomData 
+            _digest: PhantomData,
         })
     }
 
@@ -108,21 +108,24 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
     pub fn append(&mut self, item: T) {
         let item_index = self.item_count;
         self.item_count += 1;
-        
+
         // Store the item for proof generation
         self.items.insert(item_index, item.clone());
-        
+
         // Track the initial position
-        self.item_positions.insert(item_index, ItemPosition {
-            level: 0,
-            index: self.levels[0].len(),
-        });
-        
+        self.item_positions
+            .insert(item_index, ItemPosition { level: 0, index: self.levels[0].len() });
+
         self.append_to_level(0, TowerNode::Item(item), Some(item_index));
     }
 
     /// Recursive helper to append a node to a specific level
-    fn append_to_level(&mut self, level: usize, node: TowerNode<T, D>, _initial_item_index: Option<usize>) {
+    fn append_to_level(
+        &mut self,
+        level: usize,
+        node: TowerNode<T, D>,
+        _initial_item_index: Option<usize>,
+    ) {
         // Ensure we have enough levels
         while self.levels.len() <= level {
             self.levels.push(Vec::new());
@@ -136,30 +139,24 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
             // Track overflow for proof generation
             if level == 0 {
                 // For level 0, we track which original items are being digested
-                let start_index = if self.item_count >= self.width {
-                    self.item_count - self.width
-                } else {
-                    0
-                };
-                
+                let start_index =
+                    if self.item_count >= self.width { self.item_count - self.width } else { 0 };
+
                 let mut overflow_items = Vec::new();
                 for i in 0..self.width.min(self.item_count) {
                     let item_idx = start_index + i;
                     overflow_items.push(item_idx);
-                    
+
                     // Update position to indicate it's now part of a digest at the next level
                     if let Some(pos) = self.item_positions.get_mut(&item_idx) {
                         pos.level = level + 1;
                         pos.index = self.levels.get(level + 1).map_or(0, |l| l.len());
                     }
                 }
-                
-                self.overflow_records.push(OverflowRecord {
-                    level,
-                    item_indices: overflow_items,
-                });
+
+                self.overflow_records.push(OverflowRecord { level, item_indices: overflow_items });
             }
-            
+
             // Compute digest of the full level
             let digest = D::digest_items(&self.levels[level]);
 
@@ -202,35 +199,32 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         None
     }
 
-
-    /// Generate a membership proof for an item at a given index
+    /// Generate a proof for an item at a given index
     pub fn generate_proof(&self, index: usize) -> Result<MembershipProof<T, D>, LazyTowerError> {
         // Check bounds
         if self.item_count == 0 || index >= self.item_count {
             return Err(LazyTowerError::InvalidIndex { index, max: self.item_count });
         }
-        
+
         // Get the original item
-        let item = self.items.get(&index)
-            .ok_or(LazyTowerError::ProofGenerationNotImplemented)?
-            .clone();
-        
+        let item =
+            self.items.get(&index).ok_or(LazyTowerError::ProofGenerationNotImplemented)?.clone();
+
         // Get current root
-        let root = self.root_digest()
-            .ok_or(LazyTowerError::ProofGenerationNotImplemented)?;
-        
+        let root = self.root_digest().ok_or(LazyTowerError::ProofGenerationNotImplemented)?;
+
         // Build the proof path
         let mut path = ProofPath::new();
-        
+
         // Simple case: if there's only one item, no siblings needed
         if self.item_count == 1 {
             return Ok(MembershipProof { item, path, root });
         }
-        
+
         // Check if the item has been part of an overflow
         let mut found_in_overflow = false;
         let mut sibling_indices = Vec::new();
-        
+
         for record in &self.overflow_records {
             if record.item_indices.contains(&index) {
                 found_in_overflow = true;
@@ -243,59 +237,60 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
                 break;
             }
         }
-        
+
         if found_in_overflow && !sibling_indices.is_empty() {
-            // Simple case: handle two items that overflowed together
-            if sibling_indices.len() == 1 {
-                let sibling_idx = sibling_indices[0];
-                if let Some(sibling_item) = self.items.get(&sibling_idx) {
-                    let sibling_digest = D::digest_item(sibling_item);
-                    if index < sibling_idx {
-                        path.add_right(sibling_digest);
-                    } else {
-                        path.add_left(sibling_digest);
-                    }
-                    
-                    // TODO: Handle multiple levels of overflow
-                    // For now, just return if we found the immediate sibling
-                    return Ok(MembershipProof { item, path, root });
+            // Collect raw sibling bytes
+            let mut raw_siblings = Vec::new();
+            let mut item_position = 0;
+
+            // Sort indices to maintain order
+            let mut all_indices = sibling_indices.clone();
+            all_indices.push(index);
+            all_indices.sort();
+
+            // Find position and collect raw bytes
+            for (pos, &idx) in all_indices.iter().enumerate() {
+                if idx == index {
+                    item_position = pos;
+                } else if let Some(sibling_item) = self.items.get(&idx) {
+                    raw_siblings.push(sibling_item.as_ref().to_vec());
                 }
             }
+
+            path.add_raw_siblings(item_position, raw_siblings);
+
+            // TODO: Handle multiple levels of overflow
+            // For now, just return if we found the immediate siblings
+            return Ok(MembershipProof { item, path, root });
         }
-        
+
         // Handle items still at level 0
         if let Some(pos) = self.item_positions.get(&index) {
             if pos.level == 0 {
                 // Item is still at level 0, find siblings
                 let level = &self.levels[0];
-                
-                // Simple case: two items at level 0
-                if level.len() == 2 {
-                    let sibling_idx = if pos.index == 0 { 1 } else { 0 };
-                    if let Some(sibling) = level.get(sibling_idx) {
-                        match sibling {
-                            TowerNode::Item(item) => {
-                                let digest = D::digest_item(item);
-                                if pos.index == 0 {
-                                    path.add_right(digest);
-                                } else {
-                                    path.add_left(digest);
-                                }
-                            }
-                            TowerNode::Digest(d) => {
-                                if pos.index == 0 {
-                                    path.add_right(d.clone());
-                                } else {
-                                    path.add_left(d.clone());
-                                }
-                            }
+
+                if !level.is_empty() {
+                    let mut raw_siblings = Vec::new();
+
+                    // For level 0, we need to store raw bytes to match root_digest computation
+                    for (i, node) in level.iter().enumerate() {
+                        if i != pos.index {
+                            // Extract raw bytes from TowerNode
+                            let raw_bytes = match node {
+                                TowerNode::Item(item) => item.as_ref().to_vec(),
+                                TowerNode::Digest(d) => d.as_ref().to_vec(),
+                            };
+                            raw_siblings.push(raw_bytes);
                         }
                     }
+
+                    path.add_raw_siblings(pos.index, raw_siblings);
                     return Ok(MembershipProof { item, path, root });
                 }
             }
         }
-        
+
         // For more complex cases, we need full implementation
         Err(LazyTowerError::ProofGenerationNotImplemented)
     }

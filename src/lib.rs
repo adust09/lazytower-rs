@@ -1,6 +1,6 @@
 //! LazyTower - An O(1) amortized cost alternative to Incremental Merkle Trees
 //!
-//! This implementation provides efficient membership proofs with configurable tower width.
+//! This implementation provides efficient proofs with configurable tower width.
 
 pub mod digest;
 pub mod error;
@@ -11,8 +11,3 @@ pub use digest::Digest;
 pub use error::LazyTowerError;
 pub use proof::{MembershipProof, ProofPath};
 pub use tower::{LazyTower, TowerNode};
-
-#[cfg(test)]
-mod tests {
-    // Basic tests can be added here
-}
