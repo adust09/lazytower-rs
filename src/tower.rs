@@ -44,13 +44,13 @@ enum NodeId {
 
 /// Overflow record to track which items were digested together
 #[derive(Debug, Clone)]
-struct OverflowRecord {
+struct OverflowRecord<D: Digest> {
     /// The level that overflowed
     level: usize,
     /// The node IDs that were digested together
     node_ids: Vec<NodeId>,
     /// The resulting digest
-    result_digest: Vec<u8>,
+    result_digest: D::Output,
 }
 
 /// LazyTower data structure with configurable width
@@ -67,7 +67,7 @@ pub struct LazyTower<T, D: Digest> {
     /// Mapping from item index to its current position in the tower
     item_positions: HashMap<usize, ItemPosition>,
     /// Overflow records to track digests
-    overflow_records: Vec<OverflowRecord>,
+    overflow_records: Vec<OverflowRecord<D>>,
     /// Mapping from digest to the NodeIds it contains
     digest_to_nodes: HashMap<Vec<u8>, Vec<NodeId>>,
     /// Mapping from level and index to NodeId for current nodes
@@ -177,7 +177,7 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
             self.overflow_records.push(OverflowRecord {
                 level,
                 node_ids: overflow_node_ids,
-                result_digest: digest_bytes,
+                result_digest: digest.clone(),
             });
 
             // Update positions for items at level 0
@@ -300,26 +300,16 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
                             position = i;
                         } else if let NodeId::Digest(child_nodes) = nid {
                             // Find the digest for this node group
-                            for record in &self.overflow_records {
-                                if &record.node_ids == child_nodes {
-                                    // Create a proper digest output from the bytes
-                                    // For testing, we'll use the stored digest bytes directly
-                                    // In a real implementation, this would need proper type conversion
-                                    if let Ok(_digest) = std::str::from_utf8(&record.result_digest)
-                                    {
-                                        digest_siblings.push(record.result_digest.clone());
-                                    }
+                            for overflow_record in &self.overflow_records {
+                                if &overflow_record.node_ids == child_nodes {
+                                    digest_siblings.push(overflow_record.result_digest.clone());
                                     break;
                                 }
                             }
                         }
                     }
 
-                    // For generic Digest trait, we need to handle this differently
-                    // Since we can't easily convert Vec<u8> to D::Output generically,
-                    // we'll continue using raw siblings but the verification logic
-                    // needs to be aware of the level
-                    path.add_raw_siblings(position, digest_siblings);
+                    path.add_siblings(position, digest_siblings);
                 }
 
                 // Continue building path for the parent digest
