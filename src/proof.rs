@@ -42,17 +42,21 @@ pub struct MembershipProof<T, D: Digest> {
 impl<D: Digest> ProofPath<D> {
     /// Create a new empty proof path
     pub fn new() -> Self {
-        Self { elements: Vec::new() }
+        Self {
+            elements: Vec::new(),
+        }
     }
 
     /// Add siblings to the path
     pub fn add_siblings(&mut self, position: usize, siblings: Vec<D::Output>) {
-        self.elements.push(PathElement::Siblings { position, siblings });
+        self.elements
+            .push(PathElement::Siblings { position, siblings });
     }
 
     /// Add raw siblings to the path (for level 0)
     pub fn add_raw_siblings(&mut self, position: usize, siblings: Vec<Vec<u8>>) {
-        self.elements.push(PathElement::RawSiblings { position, siblings });
+        self.elements
+            .push(PathElement::RawSiblings { position, siblings });
     }
 
     /// Verify a proof path for an item
@@ -150,7 +154,6 @@ impl<D: Digest> ProofPath<D> {
         &final_digest == expected_root
     }
 }
-
 
 impl<T: Clone + AsRef<[u8]>, D: Digest> MembershipProof<T, D> {
     /// Verify the proof

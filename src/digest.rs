@@ -150,7 +150,10 @@ mod tests {
 
         let root = tower.root_digest().expect("Should have root");
         // The root should be the combination of level 1 nodes
-        assert_eq!(root, b"digest_items[digest_items[0,1,2],digest_items[3,4,5]]");
+        assert_eq!(
+            root,
+            b"digest_items[digest_items[0,1,2],digest_items[3,4,5]]"
+        );
     }
 
     #[test]

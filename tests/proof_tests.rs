@@ -75,7 +75,10 @@ fn test_proof_path_verification_width_3() {
 
     let mut path = ProofPath::<MockDigest>::new();
     // Use raw siblings for first level
-    path.add_raw_siblings(1, vec![sibling_a.as_ref().to_vec(), sibling_c.as_ref().to_vec()]);
+    path.add_raw_siblings(
+        1,
+        vec![sibling_a.as_ref().to_vec(), sibling_c.as_ref().to_vec()],
+    );
 
     assert!(path.verify(&item, &expected_root));
 }
@@ -132,7 +135,11 @@ fn test_membership_proof_verify() {
     let mut path = ProofPath::<MockDigest>::new();
     path.add_raw_siblings(0, vec![sibling.as_ref().to_vec()]);
 
-    let proof = MembershipProof { item: item.clone(), path, root };
+    let proof = MembershipProof {
+        item: item.clone(),
+        path,
+        root,
+    };
 
     assert!(proof.verify());
 }
@@ -241,7 +248,11 @@ fn test_proof_verification_after_overflow_width_3() {
     // Verify proofs still work
     for i in 0..3 {
         let proof = tower.generate_proof(i).unwrap();
-        assert!(proof.verify(), "Proof verification failed for item {} after overflow", i);
+        assert!(
+            proof.verify(),
+            "Proof verification failed for item {} after overflow",
+            i
+        );
     }
 }
 
@@ -361,7 +372,11 @@ fn test_complex_proof_generation() {
     // These should all work since they're at level 0
     for i in 0..3 {
         let proof = tower.generate_proof(i).unwrap();
-        assert!(proof.verify(), "Failed to verify proof for item {} in simple case", i);
+        assert!(
+            proof.verify(),
+            "Failed to verify proof for item {} in simple case",
+            i
+        );
     }
 
     // Now test overflow case
@@ -386,7 +401,10 @@ fn test_complex_proof_generation() {
     }
 
     println!("Generated {} out of 7 proofs", generated_count);
-    assert!(generated_count >= 3, "Should be able to generate at least some proofs");
+    assert!(
+        generated_count >= 3,
+        "Should be able to generate at least some proofs"
+    );
 }
 
 #[test]
@@ -408,7 +426,10 @@ fn test_proof_debugging() {
             for (i, elem) in proof.path.elements.iter().enumerate() {
                 match elem {
                     lazytower_rs::proof::PathElement::Siblings { position, siblings } => {
-                        println!("Path[{}]: Position {} with siblings {:?}", i, position, siblings);
+                        println!(
+                            "Path[{}]: Position {} with siblings {:?}",
+                            i, position, siblings
+                        );
                     }
                     lazytower_rs::proof::PathElement::RawSiblings { position, siblings } => {
                         println!(

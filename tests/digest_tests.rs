@@ -33,8 +33,10 @@ impl Digest for TrackedDigest {
     }
 
     fn digest_items<T: AsRef<[u8]>>(items: &[T]) -> Self::Output {
-        let items_str: Vec<String> =
-            items.iter().map(|item| String::from_utf8_lossy(item.as_ref()).to_string()).collect();
+        let items_str: Vec<String> = items
+            .iter()
+            .map(|item| String::from_utf8_lossy(item.as_ref()).to_string())
+            .collect();
         TrackedDigestOutput(format!("D[{}]", items_str.join(",")))
     }
 }
@@ -176,8 +178,11 @@ fn test_digest_trait_implementation() {
     let digest = TrackedDigest::digest_item(&item);
     assert_eq!(digest.0, "D(hello)");
 
-    let items =
-        vec![TestItem("a".to_string()), TestItem("b".to_string()), TestItem("c".to_string())];
+    let items = vec![
+        TestItem("a".to_string()),
+        TestItem("b".to_string()),
+        TestItem("c".to_string()),
+    ];
     let multi_digest = TrackedDigest::digest_items(&items);
     assert_eq!(multi_digest.0, "D[a,b,c]");
 }

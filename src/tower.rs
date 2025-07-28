@@ -95,7 +95,6 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         })
     }
 
-
     /// Get the current height of the tower (number of levels)
     pub fn height(&self) -> usize {
         self.levels.len()
@@ -125,12 +124,16 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         self.items.insert(item_index, item.clone());
 
         // Track the initial position
-        let position = ItemPosition { level: 0, index: self.levels[0].len() };
+        let position = ItemPosition {
+            level: 0,
+            index: self.levels[0].len(),
+        };
         self.item_positions.insert(item_index, position.clone());
 
         // Track the node ID
         let node_id = NodeId::Item(item_index);
-        self.level_nodes.insert((position.level, position.index), node_id.clone());
+        self.level_nodes
+            .insert((position.level, position.index), node_id.clone());
 
         self.append_to_level(0, TowerNode::Item(item), node_id);
     }
@@ -147,7 +150,8 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         self.levels[level].push(node);
 
         // Track node at this position
-        self.level_nodes.insert((level, node_index), node_id.clone());
+        self.level_nodes
+            .insert((level, node_index), node_id.clone());
 
         // Check if the level overflows
         if self.levels[level].len() >= self.width {
@@ -167,7 +171,8 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
             let digest_node_id = NodeId::Digest(overflow_node_ids.clone());
 
             // Track which nodes went into this digest
-            self.digest_to_nodes.insert(digest_bytes.clone(), overflow_node_ids.clone());
+            self.digest_to_nodes
+                .insert(digest_bytes.clone(), overflow_node_ids.clone());
 
             // Track overflow record
             self.overflow_records.push(OverflowRecord {
@@ -205,7 +210,6 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
         self.levels.get(index)
     }
 
-
     /// Compute the root digest of the tower
     pub fn root_digest(&self) -> Option<D::Output> {
         // Find the highest non-empty level
@@ -230,15 +234,23 @@ impl<T: Clone + AsRef<[u8]>, D: Digest> LazyTower<T, D> {
     pub fn generate_proof(&self, index: usize) -> Result<MembershipProof<T, D>, LazyTowerError> {
         // Check bounds
         if self.item_count == 0 || index >= self.item_count {
-            return Err(LazyTowerError::InvalidIndex { index, max: self.item_count });
+            return Err(LazyTowerError::InvalidIndex {
+                index,
+                max: self.item_count,
+            });
         }
 
         // Get the original item
-        let item =
-            self.items.get(&index).ok_or(LazyTowerError::ProofGenerationNotImplemented)?.clone();
+        let item = self
+            .items
+            .get(&index)
+            .ok_or(LazyTowerError::ProofGenerationNotImplemented)?
+            .clone();
 
         // Get current root
-        let root = self.root_digest().ok_or(LazyTowerError::ProofGenerationNotImplemented)?;
+        let root = self
+            .root_digest()
+            .ok_or(LazyTowerError::ProofGenerationNotImplemented)?;
 
         // Build the proof path
         let mut path = ProofPath::new();

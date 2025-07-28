@@ -33,8 +33,10 @@ impl Digest for TestDigest {
     }
 
     fn digest_items<T: AsRef<[u8]>>(items: &[T]) -> Self::Output {
-        let items_str: Vec<String> =
-            items.iter().map(|item| String::from_utf8_lossy(item.as_ref()).to_string()).collect();
+        let items_str: Vec<String> = items
+            .iter()
+            .map(|item| String::from_utf8_lossy(item.as_ref()).to_string())
+            .collect();
         TestDigestOutput(format!("D[{}]", items_str.join(",")))
     }
 }
@@ -48,7 +50,10 @@ fn test_append_single_item() {
     assert_eq!(tower.len(), 1);
     assert_eq!(tower.height(), 1);
     assert_eq!(tower.level(0).unwrap().len(), 1);
-    assert_eq!(tower.level(0).unwrap()[0], TowerNode::Item(TestItem(b"item1".to_vec())));
+    assert_eq!(
+        tower.level(0).unwrap()[0],
+        TowerNode::Item(TestItem(b"item1".to_vec()))
+    );
 }
 
 #[test]
