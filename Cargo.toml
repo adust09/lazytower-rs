@@ -6,6 +6,13 @@ edition = "2021"
 [dependencies]
 sha2 = { version = "0.10", optional = true }
 
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "verification_benchmark"
+harness = false
+
 [features]
 default = []
 sha256 = ["sha2"]
